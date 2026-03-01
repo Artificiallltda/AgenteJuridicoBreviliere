@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from src.config.settings import get_settings
 from src.config.logging import setup_logging, get_logger
 from src.api.webhooks import router as webhook_router
+from src.api.admin import router as admin_router
 
 setup_logging()
 logger = get_logger(__name__)
@@ -22,6 +23,7 @@ app = FastAPI(
 
 # Registrar roteadores
 app.include_router(webhook_router)
+app.include_router(admin_router)
 
 @app.get("/health")
 async def health_check():
