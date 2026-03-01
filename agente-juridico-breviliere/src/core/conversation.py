@@ -65,23 +65,24 @@ async def process_message(state: ConversationState, user_message: str) -> str:
             logger.info("area_classificada", area=state.area_juridica, session_id=state.session_id)
 
         next_q = TriageFlow.get_next_question(state)
+        progress = TriageFlow.get_progress(state)
 
         if next_q:
             # Usa o LLM para tornar a pergunta mais natural e empatica
             messages = [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": TRIAGE_PROMPT.format(
-                    area=state.area_juridica or "Geral",
+                {"role": "user", "content": f"{TRIAGE_PROMPT.format(
+                    area=state.area_juridica or 'Geral',
                     pergunta_atual=next_q,
                     respostas_anteriores=str(state.triage_answers)
-                )}
+                )}\n\nProgresso: {progress['respondidas']}/{progress['total']} perguntas"}
             ]
             response = await llm.get_response(messages)
         else:
             # Fim da triagem: calcular score e ir para briefing
             state.score = calculate_lead_score(state.triage_answers)
             state.current_step = "briefing"
-            logger.info("triagem_concluida", score=state.score, session_id=state.session_id)
+            logger.info("triagem_concluida", score=state.score, area=state.area_juridica, session_id=state.session_id)
             response = "Entendi. Ja coletei as informacoes basicas. Deixe-me preparar um resumo para nossos advogados."
 
     # 3. Fluxo de Briefing
