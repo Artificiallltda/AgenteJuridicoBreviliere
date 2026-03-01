@@ -5,9 +5,15 @@ from src.channels.whatsapp import WhatsAppAdapter
 from src.config.settings import get_settings
 from src.config.logging import get_logger
 
+from src.core.conversation import process_message
+from src.models.conversation import ConversationState, ChannelType
+
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 settings = get_settings()
 logger = get_logger(__name__)
+
+# Cache de sessoes em memoria (substituir por Redis em producao)
+_sessions = {}
 
 # Lazy initialization: evita instanciar WhatsAppAdapter no import
 _whatsapp = None
@@ -52,4 +58,27 @@ async def receive_whatsapp(
 
     data = await request.json()
     logger.info("webhook_whatsapp_recebido")
+
+    # a) Extrair IncomingMessage
+    incoming = _get_whatsapp().parse_incoming(data)
+    if not incoming or not incoming.text:
+        return {"status": "ignored"}
+
+    session_id = incoming.channel_user_id
+
+    # b) Criar/recuperar ConversationState
+    if session_id not in _sessions:
+        _sessions[session_id] = ConversationState(
+            session_id=session_id,
+            channel=ChannelType.WHATSAPP
+        )
+    
+    state = _sessions[session_id]
+
+    # c) Processar mensagem
+    response_text = await process_message(state, incoming.text)
+
+    # d) Enviar resposta via WhatsApp
+    await _get_whatsapp().send_text(session_id, response_text)
+
     return {"status": "ok"}
