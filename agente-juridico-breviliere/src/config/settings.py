@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     # Integrations
     crm_provider: str = "pipedrive"
     crm_api_token: str = ""
+    crm_api_url: str = "https://api.pipedrive.com/v1"
     slack_webhook_url: str = ""
     notification_email: str = ""
     meta_api_version: str = "v18.0"
