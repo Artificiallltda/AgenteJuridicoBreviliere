@@ -84,7 +84,7 @@ async def receive_whatsapp(
     logger.info("webhook_whatsapp_recebido")
 
     # a) Extrair IncomingMessage
-    incoming = _get_whatsapp().parse_incoming(data)
+    incoming = await _get_whatsapp().parse_incoming(data)
     if not incoming:
         return {"status": "ignored"}
 
@@ -125,7 +125,7 @@ async def receive_telegram(request: Request):
     logger.info("webhook_telegram_recebido")
 
     # a) Extrair IncomingMessage
-    incoming = _get_telegram().parse_incoming(data)
+    incoming = await _get_telegram().parse_incoming(data)
     if not incoming:
         return {"status": "ignored"}
 
@@ -183,7 +183,7 @@ async def receive_instagram(request: Request):
     logger.info("webhook_instagram_recebido")
 
     # a) Extrair IncomingMessage
-    incoming = _get_instagram().parse_incoming(data)
+    incoming = await _get_instagram().parse_incoming(data)
     if not incoming:
         return {"status": "ignored"}
 
