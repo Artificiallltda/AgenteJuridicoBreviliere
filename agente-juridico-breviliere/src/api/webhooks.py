@@ -3,6 +3,7 @@ import hashlib
 from fastapi import APIRouter, Request, Query, HTTPException, Header
 from src.channels.whatsapp import WhatsAppAdapter
 from src.channels.telegram import TelegramAdapter
+from src.channels.instagram import InstagramAdapter
 from src.audio.transcriber import AudioTranscriber
 from src.config.settings import get_settings
 from src.config.logging import get_logger
@@ -20,6 +21,7 @@ _sessions = {}
 # Lazy initialization: evita instanciar Adapters no import
 _whatsapp = None
 _telegram = None
+_instagram = None
 _transcriber = None
 
 def _get_whatsapp():
@@ -33,6 +35,12 @@ def _get_telegram():
     if _telegram is None:
         _telegram = TelegramAdapter()
     return _telegram
+
+def _get_instagram():
+    global _instagram
+    if _instagram is None:
+        _instagram = InstagramAdapter()
+    return _instagram
 
 def _get_transcriber():
     global _transcriber
@@ -155,3 +163,61 @@ async def receive_telegram(request: Request):
 async def telegram_health():
     """Health check do webhook Telegram."""
     return {"status": "ok", "channel": "telegram"}
+
+@router.get("/instagram")
+async def verify_instagram(
+    mode: str = Query(None, alias="hub.mode"),
+    token: str = Query(None, alias="hub.verify_token"),
+    challenge: str = Query(None, alias="hub.challenge"),
+):
+    """Verificacao do webhook para Instagram (Meta)."""
+    if mode == "subscribe" and token == settings.whatsapp_verify_token:
+        logger.info("instagram_webhook_verificado_com_sucesso")
+        return int(challenge)
+    raise HTTPException(status_code=403)
+
+@router.post("/instagram")
+async def receive_instagram(request: Request):
+    """Recebe mensagens do Instagram Messaging API."""
+    data = await request.json()
+    logger.info("webhook_instagram_recebido")
+
+    # a) Extrair IncomingMessage
+    incoming = _get_instagram().parse_incoming(data)
+    if not incoming:
+        return {"status": "ignored"}
+
+    user_message = incoming.text
+
+    # Logica de audio para Instagram (usa mesma Meta API)
+    if not user_message and incoming.message_type == MessageType.AUDIO and incoming.media_url:
+        logger.info("transcrevendo_audio_instagram", media_id=incoming.media_url)
+        audio_bytes = await _get_transcriber().download_whatsapp_media(incoming.media_url)
+        user_message = await _get_transcriber().transcribe(audio_bytes)
+
+    if not user_message:
+        return {"status": "ignored"}
+
+    session_id = incoming.channel_user_id
+
+    # b) Criar/recuperar ConversationState
+    if session_id not in _sessions:
+        _sessions[session_id] = ConversationState(
+            session_id=session_id,
+            channel=ChannelType.INSTAGRAM
+        )
+    
+    state = _sessions[session_id]
+
+    # c) Processar mensagem
+    response_text = await process_message(state, user_message)
+
+    # d) Enviar resposta via Instagram
+    await _get_instagram().send_text(session_id, response_text)
+
+    return {"status": "ok"}
+
+@router.get("/instagram/health")
+async def instagram_health():
+    """Health check do webhook Instagram."""
+    return {"status": "ok", "channel": "instagram"}
