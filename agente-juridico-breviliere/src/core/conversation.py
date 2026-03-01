@@ -97,8 +97,7 @@ async def process_message(state: ConversationState, user_message: str) -> str:
         briefing_lines = [f"Q: {a['pergunta']} | R: {a['resposta']}" for a in state.triage_answers]
         briefing_text = "\n".join(briefing_lines)
         await handoff_manager.request_handoff(
-            session_id=state.session_id,
-            channel=state.channel.value if hasattr(state.channel, "value") else str(state.channel),
+            state=state,
             briefing=f"Briefing do Cliente (score: {state.score}):\n{briefing_text}"
         )
         response = HANDOFF_PROMPT
