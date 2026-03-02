@@ -17,7 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia apenas o necessario para manter a imagem limpa
 COPY src/ src/
-COPY knowledge_base/ knowledge_base/
 
 EXPOSE 8000
 
