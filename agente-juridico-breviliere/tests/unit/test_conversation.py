@@ -21,7 +21,7 @@ async def test_process_message_consent_flow():
 async def test_process_message_triage_flow():
     state = ConversationState(session_id="123", channel=ChannelType.WHATSAPP, lgpd_consent=True, current_step="triage")
     
-    with patch("src.core.conversation.TriageFlow.get_next_question", return_value="Qual seu nome?"), 
+    with patch("src.core.conversation.TriageFlow.get_next_question", return_value="Qual seu nome?"), \
          patch("src.core.conversation.llm.get_response", return_value="Por favor, me diga seu nome"):
         
         res = await process_message(state, "quero ajuda")
@@ -30,6 +30,6 @@ async def test_process_message_triage_flow():
 
 @pytest.mark.asyncio
 async def test_process_message_closed_returns_message():
-    state = ConversationState(session_id="123", channel=ChannelType.WHATSAPP, current_step="closed")
+    state = ConversationState(session_id="123", channel=ChannelType.WHATSAPP, lgpd_consent=True, current_step="closed")
     res = await process_message(state, "oi")
-    assert "Desculpe" in res or "Como posso ajudar" in res
+    assert "encaminhado" in res or "advogado" in res

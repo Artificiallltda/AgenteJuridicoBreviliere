@@ -4,21 +4,31 @@ import httpx
 from src.audio.transcriber import AudioTranscriber
 
 @pytest.fixture
-def transcriber(mock_openai):
+def mock_openai_local():
+    with patch("src.audio.transcriber.AsyncOpenAI") as mock:
+        client = MagicMock()
+        client.audio = MagicMock()
+        client.audio.transcriptions = MagicMock()
+        client.audio.transcriptions.create = AsyncMock()
+        mock.return_value = client
+        yield client
+
+@pytest.fixture
+def transcriber(mock_openai_local):
     return AudioTranscriber()
 
 @pytest.mark.asyncio
-async def test_transcribe_calls_whisper(transcriber, mock_openai):
-    mock_openai.audio.transcriptions.create = AsyncMock(return_value=MagicMock(text="Transcricao de teste"))
+async def test_transcribe_calls_whisper(transcriber, mock_openai_local):
+    mock_openai_local.audio.transcriptions.create.return_value = MagicMock(text="Transcricao de teste")
     
     with patch("os.unlink"):
         res = await transcriber.transcribe(b"fake_audio_bytes")
         assert res == "Transcricao de teste"
-        assert mock_openai.audio.transcriptions.create.called
+        assert mock_openai_local.audio.transcriptions.create.called
 
 @pytest.mark.asyncio
-async def test_transcribe_error_returns_fallback(transcriber, mock_openai):
-    mock_openai.audio.transcriptions.create.side_effect = Exception("Whisper error")
+async def test_transcribe_error_returns_fallback(transcriber, mock_openai_local):
+    mock_openai_local.audio.transcriptions.create.side_effect = Exception("Whisper error")
     
     res = await transcriber.transcribe(b"fake_audio_bytes")
     assert res == "[Audio nao pode ser transcrito]"

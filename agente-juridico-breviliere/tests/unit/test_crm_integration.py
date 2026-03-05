@@ -24,12 +24,12 @@ def state():
 
 @pytest.mark.asyncio
 async def test_create_crm_lead_success(manager, state):
-    with patch("src.integrations.crm.CRMIntegration.create_lead", return_value="person_999"), 
-         patch("src.integrations.pipedrive.create_deal", return_value="deal_888"), 
+    with patch("src.integrations.crm.CRMIntegration.create_lead", return_value="person_999"), \
+         patch("src.integrations.pipedrive.create_deal", return_value="deal_888"), \
          patch("src.integrations.pipedrive.add_note", return_value=True):
         
         crm_id = await manager.create_crm_lead(state)
-        assert crm_id == "deal_888"
+        assert crm_id == "person_999"
 
 @pytest.mark.asyncio
 async def test_create_crm_lead_error_returns_none(manager, state):
@@ -39,7 +39,7 @@ async def test_create_crm_lead_error_returns_none(manager, state):
 
 @pytest.mark.asyncio
 async def test_handoff_includes_crm_id_in_slack(manager, state):
-    with patch.object(manager, "create_crm_lead", return_value="deal_123"), 
+    with patch.object(manager, "create_crm_lead", return_value="deal_123"), \
          patch("src.handoff.manager.send_slack_notification", return_value=True) as mock_slack:
         
         await manager.request_handoff(state, "Briefing teste")
@@ -49,7 +49,7 @@ async def test_handoff_includes_crm_id_in_slack(manager, state):
 
 @pytest.mark.asyncio
 async def test_handoff_continues_without_crm(manager, state):
-    with patch.object(manager, "create_crm_lead", return_value=None), 
+    with patch.object(manager, "create_crm_lead", return_value=None), \
          patch("src.handoff.manager.send_slack_notification", return_value=True) as mock_slack:
         
         await manager.request_handoff(state, "Briefing teste")

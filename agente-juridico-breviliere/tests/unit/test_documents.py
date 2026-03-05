@@ -10,8 +10,8 @@ def doc_gen():
 @pytest.mark.asyncio
 async def test_generate_briefing_creates_file(doc_gen, sample_lead):
     # Mock DocxTemplate e os.path.exists
-    with patch("src.documents.generator.DocxTemplate") as mock_tpl, 
-         patch("os.path.exists", return_value=True), 
+    with patch("src.documents.generator.DocxTemplate") as mock_tpl, \
+         patch("os.path.exists", return_value=True), \
          patch("os.makedirs"):
         
         mock_instance = mock_tpl.return_value
@@ -23,8 +23,8 @@ async def test_generate_briefing_creates_file(doc_gen, sample_lead):
 
 @pytest.mark.asyncio
 async def test_generate_proposta_includes_honorarios(doc_gen, sample_lead):
-    with patch("src.documents.generator.DocxTemplate") as mock_tpl, 
-         patch("os.path.exists", return_value=True), 
+    with patch("src.documents.generator.DocxTemplate") as mock_tpl, \
+         patch("os.path.exists", return_value=True), \
          patch("os.makedirs"):
         
         mock_instance = mock_tpl.return_value
