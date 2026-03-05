@@ -634,7 +634,7 @@ DEBUG=false
 LOG_LEVEL=INFO
 
 # === LLM ===
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=fake-api-key-here
 OPENAI_MODEL=gpt-4o
 OPENAI_MODEL_LIGHT=gpt-4o-mini
 

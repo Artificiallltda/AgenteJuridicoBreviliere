@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop]
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    env:
+      OPENAI_API_KEY: fake-test-key-for-ci
+      WHATSAPP_VERIFY_TOKEN: test-token
+      TELEGRAM_BOT_TOKEN: test-token
+      DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test
+      CHROMA_PERSIST_DIR: /tmp/test_chroma
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: pytest tests/unit/ -v --tb=short --no-header
+
+      - name: Report test status
+        if: always()
+        run: echo "Tests completed with status ${{ job.status }}"

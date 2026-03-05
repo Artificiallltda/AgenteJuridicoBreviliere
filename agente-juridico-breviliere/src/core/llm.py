@@ -19,7 +19,7 @@ class LLMClient:
         """
         if self.provider != "openai":
             logger.error("provider_nao_suportado", provider=self.provider)
-            return "Desculpe, estou com dificuldades tecnicas agora."
+            return "Desculpe, estou passando por uma instabilidade técnica. Pode tentar novamente em instantes?"
 
         max_retries = 3
         delays = [1, 2, 4]
@@ -59,6 +59,6 @@ class LLMClient:
                     await asyncio.sleep(delays[attempt])
                 else:
                     logger.error("llm_request_max_retries_atingido")
-                    return "No momento nao consigo processar sua solicitacao. Por favor, tente novamente em instantes."
+                    return "No momento não consigo processar sua solicitação. Por favor, tente novamente em instantes."
 
-        return "Erro inesperado no processamento da mensagem."
+        return "Houve um erro inesperado. Por favor, tente novamente."

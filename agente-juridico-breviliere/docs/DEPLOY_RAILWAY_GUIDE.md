@@ -16,11 +16,10 @@ Assim que o projeto carregar na tela do Railway, o primeiro deploy provavelmente
 
 1. Clique no card do seu aplicativo na tela principal do seu projeto no Railway.
 2. Navegue até a aba **"Variables"** (Variáveis).
-3. Aqui você precisa colar o conteúdo do seu arquivo local `.env`. Para facilitar, clique em **"RAW Editor"** e cole todo o conteúdo de uma vez.
-4. **Variáveis obrigatórias para preencher com valores reais:**
-   - `OPENAI_API_KEY` (Sua chave da OpenAI, ex: `sk-proj-...`)
-   - `TELEGRAM_BOT_TOKEN` (Seu token do BotFather)
-   - `WHATSAPP_VERIFY_TOKEN` (O token de verificação que você inventou)
+3. Em **Variables** (Variáveis), adicione as chaves de API necessárias para o bot rodar.
+   - `OPENAI_API_KEY` (Sua chave da OpenAI, ex: `fake-api-key-aqui`)
+   - `WHATSAPP_VERIFY_TOKEN` (Se usar Meta API)
+   - `TELEGRAM_BOT_TOKEN` (Se usar Telegram)
    - `WHATSAPP_API_TOKEN` (Se for usar o WhatsApp)
    - `CRM_PROVIDER` (pipedrive) e `CRM_API_TOKEN` (O token do Pipedrive)
    - *As URLs de banco de dados (`DATABASE_URL`) e redis (`REDIS_URL`) podem ficar com os valores do `.env.example` por enquanto se você não for usá-los em produção imediatamente.*

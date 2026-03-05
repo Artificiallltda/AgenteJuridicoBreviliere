@@ -46,6 +46,13 @@ class Settings(BaseSettings):
     terms_of_use_url: str = ""
     data_retention_days: int = 1825
 
+    # ClickUp
+    clickup_api_token: str = ""
+    clickup_list_id: str = ""
+
+    # Gestão de Sessões
+    session_timeout_hours: int = 24
+
 @lru_cache()
 def get_settings() -> Settings:
     return Settings()

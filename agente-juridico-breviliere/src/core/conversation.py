@@ -1,4 +1,20 @@
 from src.models.conversation import ConversationState
+
+def _user_consented(msg: str) -> bool:
+    """Verifica se a mensagem do usuário representa consentimento LGPD."""
+    clean = msg.lower().strip()
+    if not clean:
+        return False
+        
+    exact_matches = ["s", "ok", "okay", "yep", "yes", "tudo bem", "pode", "positivo"]
+    if clean in exact_matches:
+        return True
+        
+    if clean.startswith("ac"):
+        return True
+        
+    contains_matches = ["sim", "concordo", "claro", "pode ser", "tá bom", "ta bom"]
+    return any(phrase in clean for phrase in contains_matches)
 from src.core.llm import LLMClient
 from src.core.prompts import (
     SYSTEM_PROMPT,
@@ -33,11 +49,11 @@ async def process_message(state: ConversationState, user_message: str) -> str:
 
     # 1. Verificacao de Consentimento LGPD
     if not state.lgpd_consent:
-        if user_message.lower().strip() in ["sim", "aceito", "concordo", "aceito os termos"]:
+        if _user_consented(user_message):
             state.lgpd_consent = True
             state.current_step = "triage"
             next_q = TriageFlow.get_next_question(state)
-            response = f"Otimo! Vamos prosseguir.\n\n{next_q}" if next_q else "Obrigado!"
+            response = f"Ótimo! Para começar, preciso de algumas informações. 😊\n\n{next_q}" if next_q else "Obrigado pelo consentimento!"
         else:
             response = CONSENT_PROMPT
 
@@ -83,14 +99,13 @@ async def process_message(state: ConversationState, user_message: str) -> str:
             state.score = calculate_lead_score(state.triage_answers)
             state.current_step = "briefing"
             logger.info("triagem_concluida", score=state.score, area=state.area_juridica, session_id=state.session_id)
-            response = "Entendi. Ja coletei as informacoes basicas. Deixe-me preparar um resumo para nossos advogados."
+            response = "Perfeito. Já anotei tudo o que precisamos. Deixe-me preparar um resumo para nossa equipe de advogados. Um momento... ⏳"
 
     # 3. Fluxo de Briefing
     elif state.current_step == "briefing":
-        briefing_lines = [f"- {a['pergunta']}: {a['resposta']}" for a in state.triage_answers]
-        briefing_content = "\n".join(briefing_lines)
+        # Resumo interno gerado — não exibe dados brutos ao cliente
         state.current_step = "handoff"
-        response = f"Aqui esta o que anotei:\n{briefing_content}\n\nEstou encaminhando agora para um especialista."
+        response = "Ótimo! Já tenho todas as informações necessárias. Vou encaminhar agora para um dos nossos advogados especialistas. 📋"
 
     # 4. Fluxo de Handoff
     elif state.current_step == "handoff":
@@ -120,11 +135,11 @@ async def process_message(state: ConversationState, user_message: str) -> str:
 
     # 6. Conversa encerrada
     elif state.current_step == "closed":
-        response = "Seu atendimento ja foi encaminhado para nossa equipe. Um advogado entrara em contato em breve."
+        response = "Seu atendimento já foi encaminhado para nossa equipe. Um advogado especialista entrará em contato em breve. Se precisar de algo, estarei aqui. 😊"
 
     # Fallback
     else:
-        response = "Desculpe, nao entendi. Como posso ajudar voce hoje?"
+        response = "Desculpe, não entendi bem. Como posso te ajudar hoje?"
 
     state.history.append({"role": "assistant", "content": response})
     return response

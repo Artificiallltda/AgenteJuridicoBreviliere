@@ -1,0 +1,49 @@
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+      - develop
+
+chat:
+  auto_reply: true
+
+language: "pt-BR"
+
+path_filters:
+  - "!**/node_modules/**"
+  - "!**/__pycache__/**"
+  - "!**/dist/**"
+  - "!**/data/chroma/**"
+  - "!**/*.pyc"
+
+path_instructions:
+  - path: "src/core/prompts.py"
+    instructions: |
+      Revisar se os prompts mantêm o tom da persona Brev: acolhedor, profissional, empático.
+      Verificar se não há aconselhamento jurídico direto nas mensagens.
+      Verificar se há acentuação correta em português do Brasil.
+  - path: "src/core/conversation.py"
+    instructions: |
+      Verificar se o fluxo de consentimento LGPD está correto e robusto.
+      Verificar se o estado da conversa é gerenciado corretamente entre os steps.
+      Verificar se não há dados brutos do cliente expostos nas respostas.
+  - path: "src/triage/**"
+    instructions: |
+      Verificar se perguntas condicionais estão aplicadas corretamente.
+      Verificar se o score de qualificação usa o denominador dinâmico da área jurídica.
+  - path: "src/integrations/**"
+    instructions: |
+      Verificar se há tratamento de erro adequado nas integrações externas.
+      Verificar se as chaves de API não estão hardcoded.
+  - path: "tests/**"
+    instructions: |
+      Verificar se os testes cobrem os fluxos críticos: consentimento, triagem, handoff.
+      Verificar se há mocks adequados para não chamar APIs reais nos testes.

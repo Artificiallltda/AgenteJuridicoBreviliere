@@ -87,9 +87,20 @@ async def node_respond(state: AgentState):
     return {"next_node": END}
 
 # Edges Condicionais
+# Palavras-chave que indicam que o usuário quer iniciar triagem (tem um caso)
+_TRIAGE_KEYWORDS = [
+    "demitido", "demissão", "processo", "divorcio", "divórcio",
+    "acidente", "dívida", "dívidas", "cobrança", "inss", "aposentadoria",
+    "fui preso", "preso", "guarda", "pensão", "inventário",
+    "fui", "preciso de ajuda", "preciso contratar", "quero contratar",
+    "meu caso", "meu direito", "me ajuda", "ajuda jurídica",
+    "não recebi", "não pagou", "me debi", "rescisão"
+]
+
 def route_intent(state: AgentState):
-    """Roteia para RAG ou Triagem baseado na mensagem."""
-    if len(state["last_user_message"]) > 50:
+    """Roteia para Triagem ou RAG baseado em palavras-chave de intenção."""
+    msg = state["last_user_message"].lower()
+    if any(k in msg for k in _TRIAGE_KEYWORDS):
         return "triage"
     return "rag_answer"
 

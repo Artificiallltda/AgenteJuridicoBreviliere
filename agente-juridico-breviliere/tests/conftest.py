@@ -8,7 +8,7 @@ from src.models.lead import LeadSchema, LeadStatus
 @pytest.fixture
 def mock_settings():
     return Settings(
-        openai_api_key="sk-test-key",
+        openai_api_key="fake-test-key",
         whatsapp_verify_token="test-token",
         chroma_persist_dir="./test_chroma"
     )

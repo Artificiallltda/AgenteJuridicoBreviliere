@@ -1,6 +1,7 @@
 from src.integrations.notifications import send_slack_notification
 from src.integrations.crm import CRMIntegration
 from src.integrations.pipedrive import create_deal, add_note
+from src.integrations.clickup import ClickUpIntegration
 from src.models.lead import LeadSchema, LeadStatus
 from src.models.conversation import ConversationState
 from src.config.logging import get_logger
@@ -8,10 +9,11 @@ from src.config.logging import get_logger
 logger = get_logger(__name__)
 
 class HandoffManager:
-    """Gerencia a transferencia de conversas da IA para atendimento humano e integra com CRM."""
+    """Gerencia a transferência de conversas da IA para atendimento humano e integra com CRM e ClickUp."""
 
     def __init__(self):
         self.crm = CRMIntegration()
+        self.clickup = ClickUpIntegration()
 
     async def create_crm_lead(self, state: ConversationState) -> str:
         """Converte estado da conversa em Lead no CRM."""
@@ -77,6 +79,21 @@ class HandoffManager:
         )
 
         result = await send_slack_notification(message)
+
+        # Criação de tarefa no ClickUp para acompanhamento do lead
+        name = next((a["resposta"] for a in state.triage_answers if a.get("id") == "nome"), "Lead")
+        lead_for_clickup = LeadSchema(
+            id=state.session_id,
+            name=name,
+            phone=getattr(state, "channel_user_id", state.session_id),
+            area_juridica=state.area_juridica,
+            score=state.score,
+            triage_data={"answers": state.triage_answers},
+            lgpd_consent=state.lgpd_consent
+        )
+        clickup_task_id = await self.clickup.create_lead_task(lead_for_clickup, briefing)
+        if clickup_task_id:
+            logger.info("clickup_task_criada_no_handoff", task_id=clickup_task_id, session_id=session_id)
 
         if result:
             logger.info("handoff_notificacao_enviada", session_id=session_id)
