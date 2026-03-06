@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+.env
+venv/
+env/
+
+# Node
+node_modules/
+
+# Logs and DBs
+*.log
+*.sqlite3
+*.db
+chroma_db/
+.vscode/
+
+# Temporary and Cache
+.pytest_cache/
+diff.txt
+pytest_errors*.txt
+pytest_output.txt
+
+# Executable Data Outputs
+arth-executive/data/outputs/
+arth-executive/data/temp_scripts/
+arth-executive/test_image_resp.json
