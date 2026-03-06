@@ -19,9 +19,9 @@ async def test_e2e_agent_journey():
     }
     
     # Mock das integrações externas
-    with patch("src.triage.classifier.get_openai_client") as mock_openai, 
-         patch("src.rag.embeddings.get_openai_client") as mock_embeddings, 
-         patch("src.documents.generator.DocumentGenerator.generate_briefing") as mock_gen_briefing, 
+    with patch("src.triage.classifier.get_openai_client") as mock_openai, \
+         patch("src.rag.embeddings.get_openai_client") as mock_embeddings, \
+         patch("src.documents.generator.DocumentGenerator.generate_briefing") as mock_gen_briefing, \
          patch("src.handoff.manager.HandoffManager.request_human_support") as mock_handoff:
         
         # Mock do classificador (identifica como trabalhista)
@@ -64,5 +64,4 @@ async def test_e2e_agent_journey():
         # - O classificador deve ter sido acionado para identificar 'trabalhista'
         # (Isso dependeria do nó real de classificação estar ativo no grafo)
         
-        print("
-✅ Teste E2E concluído: Jornada do cliente validada com sucesso!")
+        print("\n✅ Teste E2E concluído: Jornada do cliente validada com sucesso!")
