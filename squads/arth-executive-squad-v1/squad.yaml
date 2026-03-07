@@ -1,0 +1,44 @@
+name: arth-executive-squad-v1
+version: 1.0.0
+description: Squad executiva do Arth para orquestração de tarefas complexas, pesquisa, planejamento e execução de ferramentas.
+author: Gean / Arth Executive
+license: MIT
+slashPrefix: arth
+
+aios:
+  minVersion: "2.1.0"
+  type: squad
+
+components:
+  agents:
+    - orchestrator.md
+    - researcher.md
+    - planner.md
+    - executor.md
+    - qa.md
+    - analyst.md
+  tasks: []
+  workflows: []
+  checklists: []
+  templates: []
+  tools: []
+  scripts: []
+
+config:
+  extends: extend
+  coding-standards: config/python-standards.md
+
+dependencies:
+  python:
+    - fastapi
+    - langgraph
+    - langchain-openai
+    - langchain-google-genai
+    - chromadb
+  squads: []
+
+tags:
+  - executive
+  - swarm
+  - productivity
+  - automation

@@ -1,0 +1,19 @@
+# Telegram
+python-telegram-bot[job-queue]==21.6
+
+# Google APIs
+google-auth==2.37.0
+google-api-python-client==2.154.0
+
+# LangGraph + LangChain (multi-agentes)
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-openai>=0.2.0
+
+# Redis checkpoint (opcional — ativa persistência se REDIS_URL estiver configurado)
+langgraph-checkpoint-redis>=0.0.1
+
+# Utilidades
+requests==2.32.3
+pytz==2024.2
+httpx>=0.27.0

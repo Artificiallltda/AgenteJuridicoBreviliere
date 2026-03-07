@@ -1,46 +1,60 @@
 from langchain_core.tools import tool
-import subprocess
+import asyncio
 import os
 import uuid
-from typing import Dict, Any
+from src.config import settings
 
 @tool
-def execute_python_code(code: str) -> str:
+async def execute_python_code(code: str) -> str:
     """
-    Executa c\'F3digo Python em um subprocesso e retorna o resultado (stdout/stderr).
-    Extremamente \'FAtil para o Arth realizar c\'E1lculos complexos, processar dados,
-    gerar gr\'E1ficos ou scripts utilit\'E1rios.
-    Voc\'EA (a IA) deve fornecer o c\'F3digo Python completo e v\'E1lido.
-    Lembre-se de usar print() no c\'F3digo para que as informa\'E7\'F5es sejam retornadas no stdout.
+    Executa c\u00f3digo Python em um subprocesso isolado e retorna o resultado (stdout/stderr).
+    
+    Regras de Seguran\u00e7a: 
+    - Bloqueia imports perigosos (os, subprocess, shutil, pickle, etc).
+    - Limite de tempo de 30 segundos.
     """
+    # Lista negra de seguran\u00e7a expandida
+    blacklist = ["os.", "subprocess.", "shutil.", "pickle.", "socket.", "sys.", "eval(", "exec(", "__import__"]
+    for blocked in blacklist:
+        if blocked in code:
+            return f"ERRO DE SEGURAN\u00c7A: O uso do m\u00f3dulo ou fun\u00e7\u00e3o '{blocked}' n\u00e3o \u00e9 permitido."
+
     try:
-        # Cria um diret\'F3rio tempor\'E1rio para o script
-        temp_dir = os.path.join(os.getcwd(), "data", "temp_scripts")
+        # Usa pasta tempor\u00e1ria configurada ou baseada no BASE_DIR
+        temp_dir = os.path.join(settings.BASE_DIR, "data", "temp_scripts")
         os.makedirs(temp_dir, exist_ok=True)
         
-        # Gera um nome de arquivo \'FAnico
         filename = f"script_{uuid.uuid4().hex[:8]}.py"
         filepath = os.path.join(temp_dir, filename)
         
-        # Escreve o c\'F3digo no arquivo
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(code)
             
-        # Executa o script
-        result = subprocess.run(
-            ["python", filepath],
-            capture_output=True,
-            text=True,
-            timeout=30 # Limite de 30 segundos
+        # Executa de forma ass\u00edncrona para n\u00e3o travar o servidor
+        process = await asyncio.create_subprocess_exec(
+            "python", filepath,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
         )
         
-        output = result.stdout
-        if result.stderr:
-            output += f"\nErros/Avisos:\n{result.stderr}"
+        try:
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=30.0)
             
-        return output if output else "Script executado com sucesso (sem sa\'EDda no terminal)."
-        
-    except subprocess.TimeoutExpired:
-        return "Erro: A execu\'E7\'E3o do c\'F3digo excedeu o tempo limite de 30 segundos."
+            output = stdout.decode().strip()
+            error = stderr.decode().strip()
+            
+            final_res = output
+            if error:
+                final_res += f"\nErros/Avisos:\n{error}"
+                
+            return final_res if final_res else "Script executado com sucesso (sem sa\u00edda)."
+            
+        except asyncio.TimeoutExpired:
+            process.kill()
+            return "Erro: A execu\u00e7\u00e3o excedeu o tempo limite de 30 segundos."
+        finally:
+            # Limpeza opcional do arquivo tempor\u00e1rio pode ser feita aqui
+            pass
+            
     except Exception as e:
-        return f"Erro ao executar o c\'F3digo: {str(e)}"
+        return f"Erro ao executar o c\u00f3digo: {str(e)}"

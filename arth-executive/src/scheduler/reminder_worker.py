@@ -11,6 +11,14 @@ DB_PATH = os.path.join(os.getcwd(), "data", "reminders.db")
 # Instância global do escalonador
 scheduler = AsyncIOScheduler()
 
+async def proactive_briefing_job():
+    """Tarefa proativa: Revisa o estado atual e envia um briefing matinal."""
+    # Nota: Em produção, isso iteraria sobre usuários ativos em settings.ADMIN_NUMBERS
+    # Aqui deixamos o exemplo estrutural para o Gean ativar.
+    pass
+
+scheduler.add_job(proactive_briefing_job, 'cron', hour=8, minute=0)
+
 def _init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)

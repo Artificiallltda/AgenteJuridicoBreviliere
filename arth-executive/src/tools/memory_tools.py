@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from langchain_core.tools import tool
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
@@ -15,34 +16,38 @@ vector_store = Chroma(
 )
 
 @tool
-def save_memory(fact: str, context: str = "") -> str:
+def save_memory(fact: str, context: str = "", agent_id: str = "global") -> str:
     """
-    Salva uma informa\'E7\'E3o importante, fato, prefer\'EAncia do usu\'E1rio ou evento na mem\'F3ria de Longo Prazo.
-    Use esta ferramenta SEMPRE que o usu\'E1rio falar algo sobre ele mesmo (ex: "Meu nome \'E9 X", "Eu gosto de Y", "Meu email \'E9 Z") 
-    ou quando voc\'EA processar uma informa\'E7\'E3o longa que precisa ser lembrada no futuro.
-    - fact: A informa\'E7\'E3o principal a ser salva (ex: "O usu\'E1rio se chama Gean").
+    Salva uma informação importante, fato, preferência do usuário ou evento na memória de Longo Prazo.
+    Use esta ferramenta SEMPRE que o usuário falar algo sobre ele mesmo (ex: "Meu nome é X", "Eu gosto de Y", "Meu email é Z") 
+    ou quando você processar uma informação longa que precisa ser lembrada no futuro.
+    - fact: A informação principal a ser salva (ex: "O usuário se chama Gean").
     - context: Detalhes adicionais (opcional).
+    - agent_id: Identificador do agente que gerou a memória (opcional, default 'global').
     """
     try:
         doc = f"FATO: {fact}\nCONTEXTO: {context}"
-        vector_store.add_texts([doc])
-        return f"Mem\'F3ria salva com sucesso: '{fact}'"
+        vector_store.add_texts([doc], metadatas=[{"agent": agent_id}])
+        return f"Memória salva com sucesso: '{fact}' pelo agente '{agent_id}'"
     except Exception as e:
-        return f"Erro ao salvar na mem\'F3ria: {str(e)}"
+        return f"Erro ao salvar na memória: {str(e)}"
 
 @tool
-def search_memory(query: str, n_results: int = 3) -> str:
+def search_memory(query: str, n_results: int = 3, filter_agent: Optional[str] = None) -> str:
     """
-    Busca na mem\'F3ria de Longo Prazo do Arth por fatos, nomes, documentos ou a\'E7\'F5es passadas.
-    Use isso se voc\'EA precisar lembrar quem \'E9 o usu\'E1rio, o que ele gosta, ou consultar algo que voc\'EA salvou antes.
-    - query: O que voc\'EA est\'E1 buscando (ex: "Qual \'E9 o nome do usu\'E1rio?", "Resumo da reuni\'E3o XYZ").
+    Busca na memória de Longo Prazo do Arth por fatos, nomes, documentos ou ações passadas.
+    Use isso se você precisar lembrar quem é o usuário, o que ele gosta, ou consultar algo que você salvou antes.
+    Todos os agentes têm acesso de LEITURA à memória global por padrão.
+    - query: O que você está buscando (ex: "Qual é o nome do usuário?", "Resumo da reunião XYZ").
+    - filter_agent: (Opcional) Filtrar para buscar memórias apenas de um agente específico.
     """
     try:
-        results = vector_store.similarity_search(query, k=n_results)
+        filter_kwargs = {"filter": {"agent": filter_agent}} if filter_agent else {}
+        results = vector_store.similarity_search(query, k=n_results, **filter_kwargs)
         if not results:
-            return f"Nenhuma mem\'F3ria encontrada para: {query}"
+            return f"Nenhuma memória encontrada para: {query}"
             
-        memories = [f"- {res.page_content}" for res in results]
-        return "Mem\'F3rias encontradas:\n" + "\n".join(memories)
+        memories = [f"-[{res.metadata.get('agent', 'global')}] {res.page_content}" for res in results]
+        return "Memórias encontradas:\n" + "\n".join(memories)
     except Exception as e:
-        return f"Erro ao buscar na mem\'F3ria: {str(e)}"
+        return f"Erro ao buscar na memória: {str(e)}"

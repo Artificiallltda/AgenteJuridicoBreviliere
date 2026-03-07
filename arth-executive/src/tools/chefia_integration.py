@@ -6,36 +6,31 @@ from src.config import settings
 logger = logging.getLogger(__name__)
 
 @tool
-def ask_chefia(query: str) -> str:
+async def ask_chefia(query: str) -> str:
     """
-    Delega uma pergunta ou tarefa para o ChefIA, o seu Agente Especialista em Gastronomia da Artificiall LTDA.
-    Use esta ferramenta SEMPRE que o usu\'E1rio perguntar sobre receitas, ingredientes, dicas de culin\'E1ria, 
-    restaurantes, ou qualquer coisa relacionada ao mundo gastron\'F4mico.
-    O ChefIA \'E9 o especialista nisso, voc\'EA (Arth) apenas gerencia a requisi\'E7\'E3o.
-    - query: A pergunta exata ou pedido gastron\'F4mico do usu\'E1rio (ex: "Me d\'EA uma receita de bolo de cenoura").
+    Delega uma pergunta gastron\u00f4mica para o ChefIA (Especialista em Culin\u00e1ria).
+    Use para: receitas, dicas de cozinha, ingredientes ou card\u00e1pios.
     """
     
-    # URL provisoria do webhook do ChefIA (assumindo que roda na mesma m\'E1quina/servidor)
-    # Se o ChefIA estiver no Telegram, a integra\'E7\'E3o pode ser adaptada.
-    # Por enquanto, chamaremos a API REST interna do ChefIA caso exista.
+    # URL configurada via settings ou fallback local
     chefia_url = getattr(settings, "CHEFIA_API_URL", "http://localhost:8001/chat") 
     
     logger.info(f"Delegando para ChefIA: {query}")
     
     try:
-        # Tenta uma chamada HTTP para a API do ChefIA local (mock para est\'E1gio atual)
-        # return "Eu falei com o ChefIA e ele disse: [Resposta mockada de gastronomia]"
-        
-        # O c\'F3digo abaixo seria o real:
-        # async with httpx.AsyncClient() as client:
-        #     response = await client.post(chefia_url, json={"message": query})
-        #     return response.json().get("reply", "ChefIA n\'E3o soube responder.")
-        
-        return (
-            "Eu entrei em contato com o ChefIA \u2014 nosso especialista em gastronomia \u2014 e ele recomendou "
-            "isso para a sua solicitação gastronômica: 'Para um prato excelente, foque em ingredientes frescos e "
-            "uma boa base de temperos. Desculpe não dar a receita completa agora, estou no modo de testes da integração.'\n\n"
-            "(Nota do Sistema: Integra\'E7\'E3o mockada com sucesso. Substitua pelo endpoint real do ChefIA na ferramenta.)"
-        )
+        async with httpx.AsyncClient() as client:
+            # Tenta se comunicar com o endpoint do ChefIA
+            response = await client.post(chefia_url, json={"message": query}, timeout=30.0)
+            
+            if response.status_code == 200:
+                reply = response.json().get("reply", "O ChefIA enviou uma resposta vazia.")
+                return f"Resposta do ChefIA: {reply}"
+            else:
+                return f"O ChefIA respondeu com erro (Status {response.status_code})."
+                
     except Exception as e:
-         return f"O ChefIA est\'E1 indispon\'EDvel no momento. Tente novamente mais tarde. Erro: {e}"
+        # Fallback amig\u00e1vel caso o outro agente esteja offline
+         return (
+             f"O ChefIA est\u00e1 ocupado na cozinha no momento (Offline). "
+             f"Mas como sou um assistente executivo, posso tentar pesquisar na web para você se desejar!"
+         )
