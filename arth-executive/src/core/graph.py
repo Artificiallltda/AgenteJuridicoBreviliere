@@ -26,6 +26,8 @@ from src.tools.audio_generator import generate_audio
 from src.tools.rag_tools import query_knowledge_base, upload_document_to_knowledge_base
 from src.config import settings
 
+logger = logging.getLogger(__name__)
+
 # --- Setup dos Modelos (Orquestrador + Personas) ---
 openai_llm = ChatOpenAI(model=settings.OPENAI_MODEL, temperature=0)
 gemini_llm = ChatGoogleGenerativeAI(
@@ -34,46 +36,42 @@ gemini_llm = ChatGoogleGenerativeAI(
     temperature=0
 )
 
-# Define quem entra primeiro no ringue
+# Define motor principal
 if settings.PRIMARY_MODEL == "gemini":
-    logger = logging.getLogger(__name__) # Ensure logger exists or use print
     print("[OK] Usando Gemini como motor principal.")
     llm_with_fallbacks = gemini_llm.with_fallbacks([openai_llm])
 else:
     llm_with_fallbacks = openai_llm.with_fallbacks([gemini_llm])
 
-# --- Carregamento de Personas (AIOS Ecosystem) ---
+# --- Carregamento de Personas ---
 def load_persona(agent_filename: str) -> str:
     path = os.path.join(settings.SQUAD_PATH, agent_filename)
     try:
         with open(path, "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
-        print(f"[\u26a0\ufe0f ERRO] Persona n\u00e3o encontrada: {path}")
-        return f"Voc\u00ea \u00e9 o agente {agent_filename}. Atue com profissionalismo."
+        logger.warning(f"Persona não encontrada: {path}")
+        return f"Você é o agente {agent_filename}. Atue com profissionalismo."
 
-# --- Divisão de Tools por Especialidade ---
+# --- Ferramentas por Especialidade ---
 RESEARCHER_TOOLS = [search_web, search_memory, save_memory, query_knowledge_base]
 PLANNER_TOOLS = [get_current_time, search_memory, save_memory, analyze_data_file]
 EXECUTOR_TOOLS = [execute_python_code, generate_docx, generate_pdf, generate_image, generate_pptx, generate_audio, schedule_reminder, ask_chefia, audit_supabase_security, audit_database_schema, search_memory, save_memory, upload_document_to_knowledge_base]
-QA_TOOLS = [search_memory, save_memory]
 ANALYST_TOOLS = [analyze_data_file, audit_supabase_security, audit_database_schema, search_memory, save_memory]
+QA_TOOLS = [search_memory, save_memory]
 
-# --- Criação dos Agentes Especialistas (Nós) ---
+# --- Criação dos Agentes Especialistas ---
 def create_specialist_agent(tools, system_prompt: str):
-    # O create_react_agent gerencia o próprio loop de tool internamente
     return create_react_agent(model=llm_with_fallbacks, tools=tools, prompt=system_prompt)
 
-# Inicialização com Personas Externas
 researcher_agent = create_specialist_agent(RESEARCHER_TOOLS, load_persona("researcher.md"))
 planner_agent = create_specialist_agent(PLANNER_TOOLS, load_persona("planner.md"))
 executor_agent = create_specialist_agent(EXECUTOR_TOOLS, load_persona("executor.md"))
 qa_agent = create_specialist_agent(QA_TOOLS, load_persona("qa.md"))
 analyst_agent = create_specialist_agent(ANALYST_TOOLS, load_persona("analyst.md"))
 
-# Fun\u00e7\u00e3o Helper para rodar o sub-agente
+# Helper para os nós dos sub-agentes
 def agent_node(state, agent, name):
-    # Aumentamos o limite interno de recurs\u00e3o para o sub-agente
     result = agent.invoke(state, {"recursion_limit": 25})
     last_msg = result["messages"][-1]
     return {
@@ -87,15 +85,14 @@ def executor_node(state): return agent_node(state, executor_agent, "arth_executo
 def qa_node(state): return agent_node(state, qa_agent, "arth_qa")
 def analyst_node(state): return agent_node(state, analyst_agent, "arth_analyst")
 
-# --- Orquestrador (Supervisor Node) ---
+# --- Orquestrador (Supervisor) ---
 members = ["arth_researcher", "arth_planner", "arth_executor", "arth_qa", "arth_analyst"]
-# Adicionamos o nó de aprovação à lista de opções técnicas
 options = ["FINISH", "arth_approval"] + members
 
 class RouteResponse(BaseModel):
     next_agent: Literal["FINISH", "arth_researcher", "arth_planner", "arth_executor", "arth_qa", "arth_analyst"]
     final_answer: str = ""
-    requires_approval: bool = False # Campo novo para o Orchestrator sinalizar
+    requires_approval: bool = False
 
 orchestrator_persona = load_persona("orchestrator.md")
 system_prompt = (
@@ -117,7 +114,6 @@ supervisor_chain = prompt | llm_with_fallbacks.with_structured_output(RouteRespo
 def supervisor_node(state: AgentState):
     print(f"[\u2699\uFE0F Arth Orchestrator] Gerenciando fluxo para: {state.get('sender', 'user')}")
     
-    # Se já fomos aprovados, preparamos o reset, mas continuamos o roteamento
     update_data = {}
     if state.get("approval_status") == "approved":
          update_data["approval_status"] = "none"
@@ -129,29 +125,26 @@ def supervisor_node(state: AgentState):
         update_data.update({"next_agent": "FINISH", "messages": [AIMessage(content=content, name="arth_orchestrator")]})
         return update_data
     
-    # Se o orquestrador pediu aprovação, desviamos para o nó de aprovação
     if routing_result.requires_approval:
-        print("[\u26A0\uFE0F HITL] A\u00e7\u00e3o cr\u00edtica detectada. Encaminhando para aprova\u00e7\u00e3o.")
-        update_data.update({"next_agent": "arth_approval", "requires_approval": True})
+        print("[\u26A0\uFE0F HITL] Ação crítica detectada. Encaminhando para aprovação.")
+        # IMPORTANTE: Adicionamos a mensagem de pedido de aprovação ao histórico para o LLM "saber" que já pediu.
+        content = "[⚠️ Ação Crítica] Esta tarefa exige execução de comandos.\n\n**Você autoriza o Arth a prosseguir?** (Responda 'Sim' ou 'Ok')"
+        update_data.update({
+            "next_agent": "arth_approval", 
+            "requires_approval": True,
+            "messages": [AIMessage(content=content, name="arth_orchestrator")]
+        })
         return update_data
         
     update_data["next_agent"] = routing_result.next_agent
     return update_data
 
 def approval_node(state: AgentState):
-    """
-    Nó que serve como 'breakpoint'. 
-    Quando o grafo atinge este nó, ele será pausado (se configurado com interrupt_before).
-    Ao retomar, ele simplesmente marca como aprovado (assumindo que o usuário deu o OK).
-    """
     return {
         "approval_status": "approved",
         "requires_approval": False,
         "messages": [AIMessage(content="Aprovado pelo usuário. Prosseguindo...", name="arth_approval")]
     }
-
-from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from psycopg import AsyncConnection
 
 # --- Montagem do Grafo ---
 def build_arth_graph():
@@ -163,14 +156,12 @@ def build_arth_graph():
     workflow.add_node("arth_executor", executor_node)
     workflow.add_node("arth_qa", qa_node)
     workflow.add_node("arth_analyst", analyst_node)
-    workflow.add_node("arth_approval", approval_node) # Novo nó
+    workflow.add_node("arth_approval", approval_node)
     
     workflow.add_edge(START, "arth_orchestrator")
-    
     for member in members:
         workflow.add_edge(member, "arth_orchestrator")
-    
-    workflow.add_edge("arth_approval", "arth_orchestrator") # Volta para decidir o próximo
+    workflow.add_edge("arth_approval", "arth_orchestrator")
         
     workflow.add_conditional_edges(
         "arth_orchestrator",
@@ -178,20 +169,4 @@ def build_arth_graph():
         {k: k for k in members} | {"FINISH": END, "arth_approval": "arth_approval"}
     )
     
-    # Persistência Profissional (Supabase / Postgres)
-    if settings.SUPABASE_DATABASE_URL:
-        # Nota: O langgraph-checkpoint-postgres gerencia as tabelas automaticamente
-        # Precisamos usar a versão assíncrona para o execute_brain do message_handler
-        async def get_checkpointer():
-            conn = await AsyncConnection.connect(settings.SUPABASE_DATABASE_URL)
-            return AsyncPostgresSaver(conn)
-        
-        # Como o build_arth_graph() é síncrono no message_handler, 
-        # mas o compile() aceita o saver, vamos precisar de um padrão diferente ou 
-        # mudar o message_handler.
-        # Por enquanto, vamos usar uma gambiarra controlada ou inicializar no message_handler.
-        return workflow # Retornamos apenas o workflow para o message_handler compilar assincronamente
-    else:
-        print("[⚠️ AVISO] SUPABASE_DATABASE_URL não configurada. Usando MemorySaver (volátil).")
-        memory = MemorySaver()
-        return workflow.compile(checkpointer=memory)
+    return workflow
