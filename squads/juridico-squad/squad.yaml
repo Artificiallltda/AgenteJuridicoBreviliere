@@ -1,0 +1,45 @@
+name: juridico-squad
+version: 1.0.0
+description: Squad especializada em bots jurídicos, atendimento legal automatizado e gestão de leads qualificados.
+author: Synkra AIOS
+license: MIT
+slashPrefix: juridico
+
+aios:
+  minVersion: "2.1.0"
+  type: squad
+
+components:
+  agents:
+    - pm.md
+    - dev.md
+    - qa.md
+    - copywriter.md
+  tasks: []
+  workflows: []
+  checklists: []
+  templates: []
+  tools: []
+  scripts: []
+
+config:
+  extends: extend
+  coding-standards: config/python-standards.md
+  tech-stack: config/breviliere-stack.md
+
+dependencies:
+  node: []
+  python:
+    - fastapi
+    - langgraph
+    - openai
+    - asyncpg
+    - chromadb
+  squads: []
+
+tags:
+  - juridico
+  - bot
+  - atendimento
+  - lgpd
+  - leads

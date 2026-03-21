@@ -1,0 +1,31 @@
+services:
+  app:
+    build: .
+    ports: ["8000:8000"]
+    env_file: .env
+    depends_on: [postgres, redis, chroma]
+    volumes:
+      - ./knowledge_base:/app/knowledge_base
+      - ./data:/app/data
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: juridico
+      POSTGRES_USER: juridico
+      POSTGRES_PASSWORD: juridico_dev
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  chroma:
+    image: chromadb/chroma:latest
+    ports: ["8001:8000"]
+    volumes: [chromadata:/chroma/chroma]
+
+volumes:
+  pgdata:
+  chromadata:
