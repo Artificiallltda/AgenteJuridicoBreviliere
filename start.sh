@@ -4,6 +4,9 @@ echo "========================================="
 echo "🚀 Iniciando Agente Jurídico Breviliere"
 echo "========================================="
 echo ""
+echo "⏳ Aguardando 5 segundos antes de iniciar..."
+sleep 5
+echo ""
 echo "📁 Diretório atual: $(pwd)"
 echo "📁 Listando diretórios:"
 ls -la /app/
