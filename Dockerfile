@@ -18,11 +18,10 @@ RUN mkdir -p /app/data/chroma /app/data/outputs /app/src/documents/templates
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o código fonte completo
-COPY src/ ./src/
+# Copia todo o código fonte (incluindo start.sh)
+COPY . .
 
-# Copia start.sh
-COPY start.sh .
+# Garante que start.sh seja executável
 RUN chmod +x start.sh
 
 # Configura PYTHONPATH para encontrar os módulos
@@ -34,4 +33,5 @@ ENV DATA_OUTPUT_DIR=/app/data/outputs
 
 EXPOSE 8000
 
+# Usa o start.sh que configura PYTHONPATH dinamicamente
 CMD ["bash", "start.sh"]
