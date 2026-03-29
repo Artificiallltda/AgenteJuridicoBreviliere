@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, UTC
+from pathlib import Path
 from docxtpl import DocxTemplate
 from models.lead import LeadSchema
 from config.settings import get_settings
@@ -10,8 +11,10 @@ logger = get_logger(__name__)
 
 class DocumentGenerator:
     def __init__(self):
-        self.templates_path = "src/documents/templates"
-        self.output_path = "data/outputs"
+        # Caminhos absolutos para funcionar no container Railway (/app)
+        base_path = Path("/app") if Path("/app").exists() else Path.cwd()
+        self.templates_path = base_path / "src" / "documents" / "templates"
+        self.output_path = base_path / "data" / "outputs"
         os.makedirs(self.output_path, exist_ok=True)
 
     def _get_common_context(self, lead: LeadSchema) -> dict:
