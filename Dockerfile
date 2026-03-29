@@ -15,10 +15,15 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia apenas o necessario para manter a imagem limpa
-COPY src/ src/
+# Copia o código fonte completo
+COPY src/ ./src/
 
+# Copia start.sh
 COPY start.sh .
+RUN chmod +x start.sh
+
+# Configura PYTHONPATH para encontrar os módulos
+ENV PYTHONPATH=/app
 
 EXPOSE 8000
 
