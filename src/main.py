@@ -2,10 +2,13 @@ import os
 import sys
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from config.logging import setup_logging, get_logger
+
+# Adiciona o caminho atual ao sys.path para imports funcionarem
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Setup logging primeiro
 try:
+    from config.logging import setup_logging, get_logger
     setup_logging()
 except Exception as e:
     print(f"⚠️ Erro ao configurar logging: {e}")
@@ -16,8 +19,11 @@ except Exception as e:
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         stream=sys.stdout
     )
+    # Cria get_logger fake se não existir
+    def get_logger(name):
+        return logging.getLogger(name)
 
-logger = get_logger(__name__) if 'get_logger' in dir() else logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # Import settings após logging
 try:
