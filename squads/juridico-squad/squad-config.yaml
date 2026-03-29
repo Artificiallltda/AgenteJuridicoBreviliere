@@ -1,0 +1,346 @@
+# Configuração da Squad Jurídico Breviliere
+# Este arquivo define todos os agentes da squad e suas relações
+
+squad:
+  name: "Jurídico Breviliere"
+  description: "Squad multidisciplinar para atendimento jurídico automatizado"
+  version: "2.0"
+  updated: "2026-03-29"
+
+# Agentes da Squad
+agents:
+  # === AGENTES DE LINHA DE FRENTE ===
+  
+  - id: minato
+    name: "Minato"
+    role: "Atendimento e Triagem de Clientes"
+    slashPrefix: minato
+    activation: ["@minato", "*minato", "/minato"]
+    category: "frontline"
+    priority: 1
+    description: "Primeiro ponto de contato com clientes e leads. Triagem, acolhimento e qualificação."
+    canHandle:
+      - "novo cliente"
+      - "triagem"
+      - "agendamento"
+      - "dúvida de cliente"
+      - "atualização de status"
+      - "comunicação formal"
+    handoffTo:
+      - kakashi # Casos complexos que exigem estratégia
+      - sakura # Quando precisar de peça processual
+
+  - id: copywriter
+    name: "Copywriter"
+    role: "Tom de Voz e Copywriting Estratégico"
+    slashPrefix: copy
+    activation: ["@copy", "*copy", "/copy", "@copywriter"]
+    category: "frontline"
+    priority: 2
+    description: "Guardião do tom de voz da Brev. Revisão de prompts e templates."
+    canHandle:
+      - "revisão de tom"
+      - "copywriting"
+      - "persuasão"
+      - "metáforas jurídicas"
+      - "templates de mensagem"
+    handoffTo:
+      - ero-sennin # Conteúdo para redes sociais
+
+  # === AGENTES DE BASTIDORES ===
+  
+  - id: kakashi
+    name: "Kakashi"
+    role: "Estrategista de Bastidores"
+    slashPrefix: kakashi
+    activation: ["@kakashi", "*kakashi", "/kakashi"]
+    category: "backoffice"
+    priority: 3
+    description: "Estratégia pura. Advogado do diabo. Reconstrução de teses."
+    canHandle:
+      - "estratégia"
+      - "análise de cenário"
+      - "parcerias"
+      - "negociações"
+      - "decisões políticas"
+      - "preparar para sakura"
+    handoffTo:
+      - sakura # Quando a tese precisar virar peça
+
+  - id: tsunade
+    name: "Tsunade"
+    role: "Inteligência de Mercado e Conversão"
+    slashPrefix: tsunade
+    activation: ["@tsunade", "*tsunade", "/tsunade", "@hokage"]
+    category: "backoffice"
+    priority: 4
+    description: "Relatórios de inteligência. Monitoramento de jurisprudência e concorrentes."
+    canHandle:
+      - "relatório semanal"
+      - "inteligência de mercado"
+      - "jurisprudência"
+      - "concorrentes"
+      - "oportunidades"
+    handoffTo:
+      - ero-sennin # Quando identificar oportunidade de conteúdo
+
+  - id: kabuto
+    name: "Kabuto"
+    role: "Análise de Dados Processuais"
+    slashPrefix: kabuto
+    activation: ["@kabuto", "*kabuto", "/kabuto"]
+    category: "backoffice"
+    priority: 5
+    description: "Varredura de e-mails judiciais. Prazos e certidões de honorários."
+    canHandle:
+      - "diagnóstico de canais"
+      - "prazos críticos"
+      - "certidões de honorários"
+      - "e-mails judiciais"
+    handoffTo: []
+
+  # === AGENTES DE CONTEÚDO ===
+  
+  - id: ero-sennin
+    name: "Ero Sennin"
+    role: "Conteúdo para Redes Sociais"
+    slashPrefix: ero
+    activation: ["@ero", "*ero", "/ero", "@ero-sennin"]
+    category: "content"
+    priority: 6
+    description: "Copywriting para redes sociais. Roteiros de vídeo e artigos."
+    canHandle:
+      - "post para instagram"
+      - "roteiro de vídeo"
+      - "artigo linkedin"
+      - "conteúdo educativo"
+      - "metáforas jurídicas"
+    handoffTo:
+      - sai # Quando precisar de imagem
+
+  - id: sai
+    name: "Sai"
+    role: "Geração de Imagens"
+    slashPrefix: sai
+    activation: ["@sai", "*sai", "/sai"]
+    category: "content"
+    priority: 7
+    description: "Direção de arte visual. Geração de imagens para conteúdo."
+    canHandle:
+      - "gerar imagem"
+      - "direção de arte"
+      - "prompt visual"
+    handoffTo: []
+
+  # === AGENTES TÉCNICOS ===
+  
+  - id: sakura
+    name: "Sakura"
+    role: "Peças Processuais"
+    slashPrefix: sakura
+    activation: ["@sakura", "*sakura", "/sakura"]
+    category: "technical"
+    priority: 8
+    description: "Redação de peças processuais persuasivas."
+    canHandle:
+      - "petição inicial"
+      - "contestação"
+      - "recurso"
+      - "peça processual"
+      - "memorial"
+    handoffTo: []
+
+  - id: dev
+    name: "Dev"
+    role: "Desenvolvedor Python Sênior"
+    slashPrefix: dev
+    activation: ["@dev", "*dev", "/dev"]
+    category: "technical"
+    priority: 9
+    description: "Implementação de features, correção de bugs, testes."
+    canHandle:
+      - "implementar feature"
+      - "corrigir bug"
+      - "testes"
+      - "code review"
+    handoffTo:
+      - qa
+
+  - id: qa
+    name: "QA"
+    role: "Especialista de QA"
+    slashPrefix: qa
+    activation: ["@qa", "*qa", "/qa"]
+    category: "technical"
+    priority: 10
+    description: "Testes unitários e de integração. Cobertura de grafos."
+    canHandle:
+      - "criar testes"
+      - "cobertura de testes"
+      - "validação"
+    handoffTo: []
+
+  - id: pm
+    name: "PM"
+    role: "Product Manager"
+    slashPrefix: pm
+    activation: ["@pm", "*pm", "/pm"]
+    category: "management"
+    priority: 11
+    description: "Gestão de produto, backlog, priorização."
+    canHandle:
+      - "backlog"
+      - "priorização"
+      - "roadmap"
+      - "épicos e stories"
+    handoffTo: []
+
+# Fluxos de Trabalho (Workflow Chains)
+workflows:
+  # Fluxo: Novo Cliente → Peça Processual
+  novo-cliente-peca:
+    name: "Novo Cliente → Peça Processual"
+    steps:
+      - agent: minato
+        action: "triagem e qualificação"
+      - agent: kakashi
+        action: "estratégia e tese (gatilho sakura)"
+      - agent: sakura
+        action: "redação da peça"
+
+  # Fluxo: Inteligência → Conteúdo
+  inteligencia-conteudo:
+    name: "Inteligência → Conteúdo"
+    steps:
+      - agent: tsunade
+        action: "relatório de inteligência"
+      - agent: ero-sennin
+        action: "criação de conteúdo"
+      - agent: sai
+        action: "geração de imagens"
+
+  # Fluxo: Atendimento → Estratégia → Peça
+  atendimento-estrategia-peca:
+    name: "Atendimento → Estratégia → Peça"
+    steps:
+      - agent: minato
+        action: "atendimento inicial"
+      - agent: kakashi
+        action: "análise estratégica"
+      - agent: sakura
+        action: "peça processual"
+
+# Regras de Roteamento
+routing:
+  # Palavras-chave que ativam cada agente
+  keywords:
+    minato:
+      - "cliente"
+      - "lead"
+      - "agendar"
+      - "consulta"
+      - "honorários"
+      - "responder cliente"
+      - "triagem"
+    
+    copywriter:
+      - "tom de voz"
+      - "revisar texto"
+      - "persuasão"
+      - "copy"
+      - "metáfora"
+    
+    kakashi:
+      - "estratégia"
+      - "analisar cenário"
+      - "parceria"
+      - "negociação"
+      - "prepara para sakura"
+      - "decisão"
+    
+    tsunade:
+      - "relatório"
+      - "inteligência"
+      - "jurisprudência"
+      - "concorrentes"
+      - "oportunidade"
+      - "hokage"
+    
+    kabuto:
+      - "prazo"
+      - "e-mail"
+      - "certidão"
+      - "honorários"
+      - "diagnóstico canais"
+    
+    ero-sennin:
+      - "post"
+      - "instagram"
+      - "vídeo"
+      - "roteiro"
+      - "conteúdo"
+      - "redes sociais"
+    
+    sai:
+      - "imagem"
+      - "visual"
+      - "gerar"
+      - "foto"
+      - "arte"
+    
+    sakura:
+      - "peça"
+      - "petição"
+      - "contestação"
+      - "recurso"
+      - "processual"
+      - "memorial"
+    
+    dev:
+      - "implementar"
+      - "bug"
+      - "feature"
+      - "código"
+      - "teste"
+    
+    qa:
+      - "teste"
+      - "cobertura"
+      - "validar"
+    
+    pm:
+      - "backlog"
+      - "priorizar"
+      - "roadmap"
+      - "épico"
+      - "story"
+
+  # Agente padrão quando não houver match claro
+  default: minato
+
+# Configurações Globais
+settings:
+  # Prefixo para comandos
+  commandPrefix: "*"
+  
+  # Prefixo para menção de agentes
+  mentionPrefix: "@"
+  
+  # Tempo de espera para handoff (segundos)
+  handoffTimeout: 30
+  
+  # Habilitar logging de interações
+  logging: true
+  
+  # Habilitar sugestão de handoff
+  suggestHandoff: true
+  
+  # Idioma padrão
+  language: "pt-BR"
+
+# Metadados
+metadata:
+  createdAt: "2026-03-29"
+  createdBy: "Orion (AIOX Master)"
+  lastModified: "2026-03-29"
+  version: "2.0"
