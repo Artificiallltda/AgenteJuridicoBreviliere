@@ -1,9 +1,11 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
+from pathlib import Path
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
-    
+
     # App
     app_name: str = "Agente Juridico Breviliere"
     debug: bool = False
@@ -17,7 +19,8 @@ class Settings(BaseSettings):
 
     # Embeddings / Vector Store
     embedding_model: str = "text-embedding-3-small"
-    chroma_persist_dir: str = "./data/chroma"
+    # Usa PATH do container (/app/data/chroma) ou caminho relativo se estiver em dev local
+    chroma_persist_dir: str = os.getenv("CHROMA_PERSIST_DIR", str(Path.cwd() / "data" / "chroma"))
 
     # Database
     database_url: str = "postgresql+asyncpg://juridico:juridico_dev@localhost:5432/juridico"
