@@ -1,21 +1,2 @@
-# Ambiente
-.env
-.env.*
-!.env.example
-
-# Lixo e Cachê
-__pycache__/
-*.pyc
-.pytest_cache/
 diff.txt
 pytest*.txt
-*.log
-
-# Ferramentas
-.vscode/
-.claude/
-.coderabbit.yaml
-
-# AIOX e Gemini
-.aiox-core/
-.gemini/
