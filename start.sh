@@ -21,7 +21,14 @@ echo "🔧 PYTHONPATH: $PYTHONPATH"
 echo "🔧 CHROMA_PERSIST_DIR: $CHROMA_PERSIST_DIR"
 echo "🔧 PORT: $PORT"
 echo ""
+
+# Adiciona /app ao PYTHONPATH para encontrar os módulos
+export PYTHONPATH="/app:${PYTHONPATH:-}"
+echo "🔧 PYTHONPATH atualizado: $PYTHONPATH"
+echo ""
+
 echo "🚀 Iniciando servidor na porta $PORT..."
 echo "========================================="
 
-uvicorn src.main:app --host 0.0.0.0 --port $PORT
+# Usa python -m para garantir que o caminho esteja correto
+cd /app && python -m uvicorn src.main:app --host 0.0.0.0 --port $PORT
