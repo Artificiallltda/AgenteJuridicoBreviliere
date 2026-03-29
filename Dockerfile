@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y \
     libpangocairo-1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
+# Cria diretórios de dados
+RUN mkdir -p /app/data/chroma /app/data/outputs /app/src/documents/templates
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -24,6 +27,10 @@ RUN chmod +x start.sh
 
 # Configura PYTHONPATH para encontrar os módulos
 ENV PYTHONPATH=/app
+
+# Variáveis de ambiente padrão
+ENV CHROMA_PERSIST_DIR=/app/data/chroma
+ENV DATA_OUTPUT_DIR=/app/data/outputs
 
 EXPOSE 8000
 
