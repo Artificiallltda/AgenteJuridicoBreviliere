@@ -1,2 +1,17 @@
+.env
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+data/
+outputs/
+*.docx
+!src/documents/templates/*.docx
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store
+*.log
 diff.txt
 pytest*.txt
